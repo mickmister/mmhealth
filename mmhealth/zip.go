@@ -1,26 +1,20 @@
-package processpacket
+package mmhealth
 
 import (
 	"archive/zip"
 	"encoding/json"
 	"fmt"
 	"io"
+	"path/filepath"
 
+	"github.com/coltoneshaw/mmhealth/mmhealth/types"
 	"github.com/mattermost/mattermost/server/public/model"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
-type PacketData struct {
-	Logs             []byte
-	NotificationLogs []byte
-	Config           model.Config
-	Plugins          model.PluginsResponse
-	Packet           model.SupportPacket
-}
+func UnzipToMemory(zipReader *zip.Reader) (*types.PacketData, error) {
 
-func UnzipToMemory(zipReader *zip.Reader) (*PacketData, error) {
-
-	fileContents := &PacketData{}
+	fileContents := &types.PacketData{}
 
 	// Read all data from the io.Reader into a byte slice
 
@@ -35,7 +29,9 @@ func UnzipToMemory(zipReader *zip.Reader) (*PacketData, error) {
 
 		defer zippedFile.Close()
 
-		switch file.Name {
+		filename := filepath.Base(file.Name)
+
+		switch filename {
 		case "sanitized_config.json":
 			config, err := processConfigFile(zippedFile)
 			if err != nil {
@@ -92,12 +88,18 @@ func processPluginFile(file io.Reader) (model.PluginsResponse, error) {
 	return plugins, nil
 }
 
-func processMattermostLog(file io.Reader) ([]byte, error) {
+func processMattermostLog(file io.Reader) ([]types.MattermostLogEntry, error) {
+
 	logs, err := io.ReadAll(file)
 	if err != nil {
 		return nil, err
 	}
-	return logs, nil
+	parsedLogs, err := ParseLogs(logs)
+
+	if err != nil {
+		return nil, err
+	}
+	return parsedLogs, nil
 }
 
 func processNotificationLog(file io.Reader) ([]byte, error) {
@@ -105,6 +107,7 @@ func processNotificationLog(file io.Reader) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return logs, nil
 }
 

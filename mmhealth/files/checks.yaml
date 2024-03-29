@@ -1,0 +1,213 @@
+config:
+    a001:
+        name: Link previews
+        result:
+            pass: Enabled
+            fail: Not enabled
+            ignore: ""
+        description: Link Previews are a feature that allows for a preview of a link to be displayed in the Mattermost client to improve end user experience. [documentation](https://docs.mattermost.com/configure/site-configuration-settings.html#posts-enablemessagelinkpreviews)
+        severity: Low
+        type: Adoption
+    a002:
+        name: Extend session length with activity
+        result:
+            pass: Enabled
+            fail: Not enabled
+            ignore: ""
+        description: For improved end-user login session lifecycle, consider enabling ServiceSettings.ExtendSessionLengthWithActivity. Verify internally if this behavior meets Enterprise policies if this is compatible. [documentation](https://docs.mattermost.com/configure/environment-configuration-settings.html#sessionlength-extendwithactivity)
+        severity: Low
+        type: Adoption
+    h001:
+        name: Site URL
+        result:
+            pass: Set
+            fail: Not set
+            ignore: ""
+        description: The siteURL is required by many functions of Mattermost. With it not set some features may not work as expected. [documentation](https://docs.mattermost.com/configure/web-server-configuration-settings.html#site-url)
+        severity: Urgent
+        type: Health
+    h002:
+        name: Elasticsearch Live Indexing
+        result:
+            pass: Modified to a value greater than default of 1 - `%v`
+            fail: Uses default value
+            ignore: Elasticsearch disabled
+        description: Live index batch size controls how often Elasticsearch is indexed in real time. On highly active servers this needs to be increased to prevent an Elasticsearch crash. [documentation](https://docs.mattermost.com/configure/environment-configuration-settings.html#live-indexing-batch-size)
+        severity: Medium
+        type: Health
+    h010:
+        name: Search is enabled
+        result:
+            pass: '%s'
+            fail: '%s'
+            ignore: ""
+        description: Either database search or elasticsearch are enabled on the environment
+        severity: High
+        type: Health
+    p002:
+        name: ID-Only Push Notifications
+        result:
+            pass: Set to `id_loaded`
+            fail: Set to `%s`
+            ignore: ""
+        description: Setting notifications to “ID-Only” avoids any identifiable Mattermost data from passing through Google and Apple notification servers.  This provides the highest level of security for mobile notifications. [documentation](https://docs.mattermost.com/configure/site-configuration-settings.html#push-notification-contents)
+        severity: Low
+        type: Proactive
+    p003:
+        name: ID attribute For LDAP
+        result:
+            pass: |-
+                ID attribute set to \newline
+                \textbf{\seqsplit{%s}}.
+            fail: Using email
+            ignore: LDAP disabled
+        description: There is no unique identifier setup for LDAP. This means it falls back to email, which can cause issues in the even of a user's name or email changing.
+        severity: Medium
+        type: Proactive
+    p004:
+        name: ID attribute for SAML
+        result:
+            pass: |-
+                ID attribute set to \newline
+                \textbf{\seqsplit{%s}}.
+            fail: Using email
+            ignore: SAML disabled
+        description: There is no unique identifier setup for SAML. This means it falls back to identifying uses based on email which can cause issues in the event of a user's name or email changing.
+        severity: Medium
+        type: Proactive
+packet:
+    h012:
+        name: Failures in LDAP jobs
+        result:
+            pass: LDAP jobs succeeded
+            fail: LDAP jobs failed
+            ignore: LDAP is disabled
+        description: If this fails it means an LDAP sync job has failed recently. Review the LDAP Jobs table in the System Console > LDAP to see what the error is.
+        severity: High
+        type: Health
+    h013:
+        name: Failures in message export jobs
+        result:
+            pass: Message export jobs succeeded
+            fail: Message export jobs failed
+            ignore: Message export is disabled
+        description: If this fails it means a message export job has failed recently. Review the message export Jobs table in the System Console > Compliance Export to see what the error is.
+        severity: High
+        type: Health
+    h014:
+        name: Failures in migration jobs
+        result:
+            pass: Migration jobs succeeded
+            fail: Migration jobs failed
+            ignore: No migration jobs found
+        description: An upgrade migration has failed. This needs to be addressed ASAP. Contact your Technical Account Manager.
+        severity: High
+        type: Health
+    h015:
+        name: Failures in data retention jobs
+        result:
+            pass: Data retention jobs succeeded
+            fail: Data retention jobs failed
+            ignore: Data retention is disabled
+        description: If this fails it means a data retention export job has failed recently. Review the data retention jobs table in the System Console > Data Retention to see what the error is.
+        severity: High
+        type: Health
+    h016:
+        name: Failures in Elasticsearch post indexing jobs
+        result:
+            pass: ES indexing jobs succeeded
+            fail: ES indexing jobs failed
+            ignore: Elasticsearch is disabled
+        description: If this fails it means an elasticsearch post indexing job has failed recently. Review the elasticsearch jobs table in the System Console > Elasticsearch to see what the error is.
+        severity: High
+        type: Health
+    h017:
+        name: Failures in Elasticsearch post aggregation jobs
+        result:
+            pass: ES aggregation jobs succeeded
+            fail: ES aggregation jobs failed
+            ignore: Elasticsearch is disabled
+        description: If this fails it means an elasticsearch post aggregation job has failed recently. Review your Mattermost logs or support packet for more details.
+        severity: High
+        type: Health
+environment:
+    h006:
+        name: Server version
+        result:
+            pass: 'Supported version: %s'
+            fail: 'Unsupported version: %s'
+            ignore: ""
+        description: Having a version out of support means you will not get security fixes, bug fixes, or general support. To see what versions are in support view our [extended support release documentation](https://docs.mattermost.com/upgrade/extended-support-release.html).
+        severity: Urgent
+        type: Health
+    h007:
+        name: Supported database
+        result:
+            pass: Postgres
+            fail: '%s'
+            ignore: ""
+        description: Mattermost supports a Postgres database only.
+        severity: Urgent
+        type: Health
+    h008:
+        name: Server OS
+        result:
+            pass: Linux
+            fail: '%s'
+            ignore: ""
+        description: Mattermost only supports running on linux distributions.
+        severity: Urgent
+        type: Health
+    h009:
+        name: Has Elasticsearch or sub 2.5M posts
+        result:
+            pass: Elasticsearch enabled
+            fail: ">2.5M posts, No Elasticsearch"
+            ignore: "<2.5M posts, No Elasticsearch"
+            error: 'Failed to get post count'
+        description: Beyond 2.5M posts the database can has issues with search and autocomplete without the use of Elasticsearch.
+        severity: High
+        type: Health
+    h011:
+        name: Missing elasticsearch plugins
+        result:
+            pass: '`analysis-icu` installed'
+            fail: '`analysis-icu` not installed'
+            ignore: Elasticsearch disabled
+        description: The analysis-icu plugin is required for Mattermost search to properly function with Elasticsearch.
+        severity: High
+        type: Health
+mattermostLog:
+    h003:
+        name: Context deadline exceeded
+        result:
+            pass: Not found
+            fail: Found
+            ignore: ""
+        description: The context deadline exceeded error is a common error in Mattermost.  It is usually caused by a slow database or a slow network connection. [documentation](https://docs.mattermost.com/install/troubleshooting.html#context-deadline-exceeded). Look into the grafana metrics to see if we've hit the max connections between Mattermost and the database. Also can be due to a mismatch in maxConnections on mattermost config vs the database max.
+        severity: High
+        type: Health
+    h004:
+        name: i/o timeout
+        result:
+            pass: Not found
+            fail: Found
+            ignore: ""
+        description: |-
+            Further investigation is needed.  Contact your Technical Account Manager for assistance.
+            A common cause of this error is due to connectivity issues.  The root cause can originate from various factors. Depending on the origin of the error, we recommend verifying accessibility of the resource. In some cases, ingress/egress rules might be causing problems, or issues may arise from the nginx configuration.
+        severity: Medium
+        type: Health
+    h005:
+        name: Error while creating session for user access token
+        result:
+            pass: Not found
+            fail: Found
+            ignore: ""
+        description: |-
+            Further investigation is needed.  Contact your Technical Account Manager for assistance.
+            A common cause of this error is due to plugins making API requests using expired tokens.
+        severity: Low
+        type: Health
+notificationLog: {}
+plugins: {}

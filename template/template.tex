@@ -1,0 +1,244 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{geometry}
+\usepackage{tabularray}
+\usepackage{xcolor}
+\usepackage{fontspec}
+\usepackage{soul}
+\usepackage{ifthen}
+\usepackage{fancyhdr}
+\usepackage{roboto}
+\usepackage{xstring}
+\usepackage{seqsplit}
+\usepackage{graphicx}
+
+\geometry{top=0.75in, bottom=0.75in, left=0.25in, right=0.25in}
+\geometry{landscape}
+
+% The url formatting to have it set for blue
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=blue,
+    pdfborderstyle={/S/U/W 1}
+}
+
+\let\oldhref\href
+\renewcommand{\href}[2]{\oldhref{#1}{\ul{#2}}}
+
+% Status Image
+% This processes the status field and returns the image circle. This is based on the status column of a check
+% The images must be included in the ./template folder on the base repo.
+% The only argument is the status of the check
+\newcommand{\statusimage}[1]{%
+    \centering
+    \raisebox{-0.3\height}{%
+        \IfStrEqCase{#1}{%
+                {pass}{\includegraphics[width=.6cm, height=.6cm]{green-circle}}%
+                {warn}{\includegraphics[width=.6cm, height=.6cm]{yellow-circle}}%
+                {fail}{\includegraphics[width=.6cm, height=.6cm]{red-circle}}%
+                {ignore}{\includegraphics[width=.6cm, height=.6cm]{white-circle}}%
+                {error}{\includegraphics[width=.6cm, height=.6cm]{error-image}}%
+        }[{#1}]%
+    }%
+}
+
+% Plugin - Pluygin Link
+% 1. URL
+% 2. Text to display
+% If the URL is empty, it will just display the text
+\newcommand{\pluginlink}[2]{
+    \ifthenelse{\equal{#1}{}}
+    {#2} % if the first argument is empty, then just display the text
+    {\href{#1}{#2}} % if the first argument is not empty, then display the text as a link
+}
+
+% Plugin - Get Plugin Version
+% 1. (plugins.isUpdated) A boolean to check if the plugin is updated
+% 2. (plugins.installedVersion) The installed version
+% 3. (plugins.latestVersion) The latest version
+% If the plugin is updated, it will return the installed version
+% If the plugin is not updated, it will return the installed version in red
+\newcommand{\getPluginVersion}[3]{%
+    \ifthenelse{\equal{#1}{true}}% plugins.isUpdated == true
+        {#2}% return plugins.installedVersion
+        {% else
+            \ifthenelse{\equal{#3}{}}% if plugins.latestVersion == ""
+            {#2}% return plugins.installedVersion
+            {\textcolor{red}{#2}}% else return plugins.installedVersion in red
+        }%
+}
+
+% Plugin - Get Latest Version
+% 1. (plugins.latestVersion) The latest version
+% 2. (plugins.latestReleaseDate) The latest release date
+\newcommand{\getLatestVersion}[2]{
+    #1 % return plugins.latestVersion
+    % adds the release date if it exists
+    \ifthenelse{\equal{#2}{}}%
+        {}%
+        {\footnotesize(#2)} % if plugins.latestReleaseDate exists, add it in parentheses
+}
+
+% Setting this to a Mattermost approved font and making it the default
+\setsansfont{Roboto}
+\renewcommand*\familydefault{\sfdefault}
+
+% Header for the document
+\pagestyle{fancy}
+\fancyhf{}
+\lhead{$metadata.companyName$}
+\rhead{$metadata.date$}
+
+
+\begin{document}
+
+    \section*{Mattermost Healthcheck Report}
+    This is an auto generated report from the healthcheck tool.
+
+    \section{Environment Checks}\label{sec:environment-checks}
+        \begin{tblr}{|Q[l,m]|Q[l,m]|Q[c,m]|Q[l,m,3cm]|Q[l,m,3cm]|X[l,m]|}
+
+            \hline
+            ID & SEV & STATUS & NAME & RESULT & DESCRIPTION \\
+            \hline
+
+            $for(environment)$
+                \MakeUppercase{$environment.id$}  &
+                $environment.severity$ &
+                \statusimage{$environment.status$} &
+                $environment.name$ &
+                $environment.result$ &
+                $environment.description$ \\
+
+                % adds the horizontal line to the bottom of the column
+                \hline
+            $endfor$
+
+        \end{tblr}
+
+    \section{Packet Checks}\label{sec:packet-checks}
+        \begin{tblr}{|Q[l,m]|Q[l,m]|Q[c,m]|Q[l,m,3cm]|Q[l,m,3cm]|X[l,m]|}
+
+            \hline
+            ID & SEV & STATUS & NAME & RESULT & DESCRIPTION \\
+            \hline
+
+            $for(packet)$
+                \MakeUppercase{$packet.id$}  &
+                $packet.severity$ &
+                \statusimage{$packet.status$} &
+                $packet.name$ &
+                $packet.result$ &
+                $packet.description$ \\
+                % adds the horizontal line to the bottom of the column
+                \hline
+            $endfor$
+
+        \end{tblr}
+
+    \section{Configuration Checks}\label{sec:configuration-checks}
+        \begin{tblr}{|Q[l,m]|Q[l,m]|Q[c,m]|Q[l,m,3cm]|Q[l,m,3cm]|X[l,m]|}
+
+            \hline
+            ID & SEV & STATUS & NAME & RESULT & DESCRIPTION \\
+            \hline
+
+            $for(config)$
+                \MakeUppercase{$config.id$}  &
+                $config.severity$ &
+                \statusimage{$config.status$} &
+                $config.name$ &
+                $config.result$ &
+                $config.description$ \\
+                % adds the horizontal line to the bottom of the column
+                \hline
+            $endfor$
+
+        \end{tblr}
+
+    \section{Mattermost Log}\label{sec:mattermost-log}
+
+        \subsection{Checks}\label{subsec:checks}
+            \begin{tblr}{|Q[l,m]|Q[l,m]|Q[c,m]|Q[l,m,3cm]|Q[l,m,3cm]|X[l,m]|}
+
+                \hline
+                ID & SEV & STATUS & NAME & RESULT & DESCRIPTION \\
+                \hline
+
+                $for(mattermostLog)$
+                    \MakeUppercase{$mattermostLog.id$} &
+                    $mattermostLog.severity$ &
+                    \statusimage{$mattermostLog.status$} &
+                    $mattermostLog.name$ &
+                    $mattermostLog.result$ &
+                    $mattermostLog.description$ \\
+                    \hline
+                $endfor$
+
+            \end{tblr}
+
+    \subsection{Top Logs}\label{subsec:top-logs}
+
+        \begin{tblr}{|Q[l,m]|Q[l,m]|X[m]|Q[l,m]|}
+
+            \hline
+            COUNT & LEVEL & MESSAGE & CALLER \\
+            \hline
+
+            $for(topLogs)$
+                $topLogs.count$ &
+                $topLogs.level$ &
+                $topLogs.msg$ &
+                $topLogs.caller$  \\
+                \hline
+            $endfor$
+
+        \end{tblr}
+
+
+
+    \section{Plugins}\label{sec:plugins}
+
+        \subsection{Active}\label{subsec:active}
+            \begin{tblr}{|Q[l,m]|Q[l,m]|Q[l,m]|Q[l,m]|Q[l,m]|}
+                \hline
+                ID & NAME & INSTALLED VERSION & LATEST VERSION & SUPPORT \\
+                \hline
+                $for(plugins)$
+                    $if(plugins.active)$
+                        $plugins.pluginID$ &
+                        \pluginlink{$plugins.pluginURL$}{$plugins.pluginName$} &
+                        \getPluginVersion{$plugins.isUpdated$}{$plugins.installedVersion$}{$plugins.latestVersion$} &
+                        \getLatestVersion{$plugins.latestVersion$}{$plugins.latestReleaseDate$} &
+                        $plugins.supportLevel$ \\
+                        \hline
+
+                    $endif$
+                $endfor$
+
+            \end{tblr}
+
+    \subsection{Inactive}\label{subsec:inactive}
+
+    \begin{tblr}{|Q[l,m]|Q[l,m]|Q[l,m]|Q[l,m]|Q[l,m]|}
+        \hline
+        ID & NAME & INSTALLED VERSION & LATEST VERSION & SUPPORT \\
+        \hline
+
+        $for(plugins)$
+            % skipping active plugins since those happen above
+            $if(plugins.active)$
+            $else$
+                $plugins.pluginID$ &
+                \pluginlink{$plugins.pluginURL$}{$plugins.pluginName$} &
+                \getPluginVersion{$plugins.isUpdated$}{$plugins.installedVersion$}{$plugins.latestVersion$} &
+                \getLatestVersion{$plugins.latestVersion$}{$plugins.latestReleaseDate$} &
+                $plugins.supportLevel$ \\
+                \hline
+            $endif$
+          $endfor$
+    \end{tblr}
+
+\end{document}
